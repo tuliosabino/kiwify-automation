@@ -1,0 +1,20 @@
+site_name: Automação Kiwify
+repo_url: https://github.com/tuliosabino/kiwify-automation
+repo_name: tuliosabino/kiwify-automation
+edit_uri: tree/main/docs
+
+theme:
+  name: material
+  language: pt-BR
+
+markdown_extensions:
+  - attr_list
+
+extra_css:
+  - stylesheets/extra.css
+
+plugins:
+- mkdocstrings:
+    handlers:
+      python:
+        paths: [app]
