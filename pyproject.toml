@@ -7,6 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
+playwright = "^1.35.0"
 
 
 [tool.poetry.group.doc.dependencies]
