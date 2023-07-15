@@ -30,6 +30,7 @@ creation_data: dict[str, dict[str, str]] = getattr(
 class BasePage():
     def __init__(self, playwright_object: Playwright) -> None:
         self.pg = self.make_pg(playwright_object)
+        self.meta_data = creation_data
 
     def make_pg(self, playwright_object: Playwright) -> Page:
         browser = playwright_object.chromium.launch_persistent_context(
@@ -76,7 +77,7 @@ class BasePage():
         create_course_button.click()
 
         self.pg.locator('button', has_text='Continuar').click()
-        course_metadata = creation_data[course_tag]
+        course_metadata = self.meta_data[course_tag]
 
         name_field = self.pg.locator(
             '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
@@ -114,9 +115,14 @@ class BasePage():
 
     def check_if_course_exists(self, course_tag: str) -> bool:
         self.pg.goto(BASE_URL + 'products')
-        course_name = creation_data[course_tag]['name']
+        course_name = self.meta_data[course_tag]['name']
 
-        self.pg.wait_for_load_state('networkidle')
+        search_field = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/'
+            'div[2]/div/div[8]/div/div[2]/div[1]/input'
+        )
+        search_field.fill(course_name)
+
         courses_rows_links = self.pg.locator(
             '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]/div'
             '/div[8]/div/div[3]/div[1]/div/div/table/tbody/tr/td[1]/a'
