@@ -1,13 +1,12 @@
 from playwright.sync_api import sync_playwright
 
-from pages.base_page import make_pg
+from src.pages.base_page import BasePage
 
 
 def main():
     with sync_playwright() as p:
-        pg = make_pg(p)
-        pg.goto('https://dashboard.kiwify.com.br/')
-        ...
+        browser = BasePage(p)
+        browser.run()
 
 
 if __name__ == '__main__':
