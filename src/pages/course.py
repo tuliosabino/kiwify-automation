@@ -110,6 +110,10 @@ class Course:
     def save_product(self) -> None:
         self.pg.locator('button', has_text='Salvar produto').click()
 
+    def create_and_get_id(self) -> None:
+        if not self.check_if_product_exists():
+            self.create_product()
+
     def general_settings(self) -> None:
         url = PRODUCT_URL.format(id=self.id)
         self.pg.goto(url) if self.pg.url != url else None
@@ -163,10 +167,6 @@ class Course:
         producer_display_name_field.fill(PRODUCER_DISPLAY_NAME)
 
         self.save_product()
-
-    def create_and_get_id(self) -> None:
-        if not self.check_if_product_exists():
-            self.create_product()
 
     def configs(self) -> None:
         self.general_settings()
