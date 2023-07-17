@@ -25,6 +25,10 @@ def main():
             course.create_and_get_id()
             course.configs()
         ...
+        for course_tag in COURSES:
+            course = Course(browser.pg, course_tag)
+            course.check_if_product_exists()
+            course.payment_and_orderbump_settings()
 
 
 if __name__ == '__main__':
