@@ -16,19 +16,28 @@ def main():
     with sync_playwright() as p:
         browser = BasePage(p)
         browser.pg.goto(BASE_URL)
+        browser.accept_terms()
         browser.login()
 
         browser.select_account()
 
         for course_tag in COURSES:
             course = Course(browser.pg, course_tag)
-            course.create_and_get_id()
-            course.configs()
+            try:
+                course.create_and_get_id()
+                course.configs()
+
+            finally:
+                course.logging.dump()
         ...
         for course_tag in COURSES:
             course = Course(browser.pg, course_tag)
-            course.check_if_product_exists()
-            course.payment_and_orderbump_settings()
+            try:
+                course.check_if_product_exists()
+                course.payment_and_orderbump_settings()
+
+            finally:
+                course.logging.dump()
 
 
 if __name__ == '__main__':
