@@ -1,7 +1,7 @@
 from os import getenv
 
 from dotenv import load_dotenv
-from playwright.sync_api import Page, Playwright
+from playwright.sync_api import Page, Playwright, expect
 
 from src.config import ACCOUNT_NAME
 
@@ -31,6 +31,17 @@ class BasePage():
         pg.set_viewport_size({"width": 1300, "height": 570})
 
         return pg
+
+    def accept_terms(self) -> None:
+        # accept_button = self.pg.locator(
+        #     '//*[@id="__layout"]/div/div/div[2]/div/div[2]/div[2]/span/button',
+        #     has_text='Aceitar os termos')
+        # try:
+        #     expect(accept_button).to_be_visible(timeout=4_000)
+        #     accept_button.click()
+        # except AssertionError:
+        #     pass
+        ...
 
     def login(self) -> None:
         if self.pg.locator("input[name='email']").is_visible():
