@@ -282,12 +282,25 @@ class Course(BasePage):
         if self.logging.verify_if_done(module['modulo']):
             return
 
+        add_button = self.pg.locator('//*[@id="options-menu"]')
+        add_button.click()
+
         add_module_button = self.pg.locator(
             '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
-            '/div/div[7]/div[1]/div[1]/div[1]/div[2]/a/button'
-        )
-
+            '/div/div[7]/div[1]/div[1]/div[1]/div[2]/div[4]/div/div[2]/div'
+            '/div/div[1]/div[1]')
         add_module_button.click()
+
+        add_button = self.pg.locator('//*[@id="options-menu"]',
+                                     has_text='Adicionar')
+        add_button.click()
+
+        add_module_button = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
+            '/div/div[7]/div[1]/div[1]/div[1]/div[2]/div[4]/div/div[2]/div'
+            '/div/div[1]/div[1]')
+        add_module_button.click()
+
         module_name_field = self.pg.locator(
             '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]'
             '/div[2]/div/div[2]/div/div[2]/div[2]/div/div/div/div[1]'
