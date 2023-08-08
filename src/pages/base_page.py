@@ -28,7 +28,7 @@ class BasePage():
             headless=False,
         )
         pg = browser.pages[0]
-        pg.set_viewport_size({"width": 1300, "height": 570})
+        pg.set_viewport_size({"width": 1300, "height": 700})
 
         return pg
 

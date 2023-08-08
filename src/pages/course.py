@@ -40,6 +40,13 @@ class Course(BasePage):
         self.id = None
         self.logging = Logging(course_tag)
 
+    def _check_checkbox(self, checkbox_locator: Locator) -> None:
+        # I have to check the checkbox with de inner_html method because
+        # the check method is not working properly.
+        checkbox_locator.click() if (
+            'translate-x-5' not in checkbox_locator.inner_html()
+        ) else None
+
     def create_product(self) -> None:
         prod_url = BASE_URL + 'products'
         self.pg.goto(prod_url) if self.pg.url != prod_url else None
@@ -165,10 +172,7 @@ class Course(BasePage):
                 '//*[@id="general"]/div[2]/div/div[2]/div/div/'
                 'div[2]/div[2]/div[2]/div/div[2]/div/div/div[1]/input')
 
-            # I have to check the checkbox with the is_visible method because
-            # the check method is not working properly
-            if not plan_name_field.is_visible():
-                check_box_plan.click()
+            self._check_checkbox(check_box_plan)
 
             plan_name_field.fill(ADDITIONAL_PLAN)
 
@@ -252,14 +256,10 @@ class Course(BasePage):
                 '/div/div[9]/div/section/div/div[2]/div[5]/div/div/input')
             description_field.fill(course_meta_data['descrição'])
 
-            # I have to check the checkbox with de inner_html method because
-            # the check method is not working properly.
             use_image_checkbox = self.pg.locator(
                 '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
                 '/div/div[9]/div/section/div/div[2]/div[6]/div/div/span')
-            use_image_checkbox.click() if (
-                'translate-x-5' not in use_image_checkbox.inner_html()
-            ) else None
+            self._check_checkbox(use_image_checkbox)
 
             add_button = self.pg.locator(
                 '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
@@ -306,6 +306,17 @@ class Course(BasePage):
             '/div/div[2]/div/div[2]/div[2]/div/div/div/div[2]/label[2]'
             '/div[1]/input')
         all_class_checkbox.check()
+
+        module_image_drop_area = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]/div'
+            '/div[2]/div/div[2]/div[2]/div[1]/div/div/div[2]/div[2]/div[1]')
+        self._insert_file(self.meta_data['path_to_images'] + '\\800x500.png',
+                          module_image_drop_area)
+        save_cut = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
+            '/div/div[2]/div/div[2]/div[2]/div[1]/div/div/div[2]/div[2]'
+            '/div[1]/div[1]/div/div[2]/div[2]/span[1]')
+        save_cut.click()
 
         add_button = self.pg.locator('button', has_text='Adicionar módulo')
         add_button.click()
@@ -364,6 +375,7 @@ class Course(BasePage):
         confirm_insert_button.dispatch_event('click')
 
     def _insert_file(self, file_path: str, locator: Locator) -> None:
+        locator.wait_for()
         with self.pg.expect_file_chooser() as fc_info:
             locator.click()
         file_chooser = fc_info.value
@@ -461,6 +473,84 @@ class Course(BasePage):
 
         self.logging.mark_as_done(f'{module["modulo"]}-{lesson["nome"]}')
 
+    def _config_member_area(self) -> None:
+        if self.logging.verify_if_done('config_member_area'):
+            return
+
+        config_tab = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]'
+            '/div[2]/div/div[6]/div[2]/div/nav/div/a',
+            has_text='Configurações'
+        )
+        config_tab.wait_for()
+        config_tab.click()
+
+        certify_checkbox = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]'
+            '/div[2]/div/div[7]/div[2]/div/div[2]/div[3]/div/div[2]'
+            '/div/div/div/div/span')
+        self._check_checkbox(certify_checkbox)
+
+        piracy_protection_checkbox = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]'
+            '/div[2]/div/div[7]/div[2]/div/div[2]/div[4]/div/div[2]'
+            '/div/div/div[1]/div/span')
+        self._check_checkbox(piracy_protection_checkbox)
+
+        premium_member_area_checkbox = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]'
+            '/div[2]/div/div[7]/div[2]/div/div[2]/div[5]/div/div[2]'
+            '/div/div/div/div[1]/div/span')
+        self._check_checkbox(premium_member_area_checkbox)
+
+        top_image_drop_area = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
+            '/div/div[7]/div[2]/div/div[2]/div[5]/div/div[2]/div/div/div'
+            '/div[3]/div[2]/div[1]/div[1]/div/label/div/div/div')
+        self._insert_file(
+            self.meta_data['path_to_images'] + '\\1140x300.png',
+            top_image_drop_area)
+        save_cut = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
+            '/div/div[7]/div[2]/div/div[2]/div[5]/div/div[2]/div/div/div'
+            '/div[3]/div[2]/div[1]/div[1]/div/div[1]/div/div[2]/div[2]'
+            '/span[1]/button')
+        save_cut.click()
+
+        top_mobile_image_drop_area = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
+            '/div/div[7]/div[2]/div/div[2]/div[5]/div/div[2]/div/div/div'
+            '/div[5]/div[2]/div/div[1]/div[1]/div/label/div/div/div')
+        self._insert_file(
+            self.meta_data['path_to_images'] + '\\600x600.png',
+            top_mobile_image_drop_area)
+        save_cut = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
+            '/div/div[7]/div[2]/div/div[2]/div[5]/div/div[2]/div/div/div'
+            '/div[5]/div[2]/div/div[1]/div[1]/div/div[1]/div/div[2]/div[2]'
+            '/span[1]/button')
+        save_cut.click()
+
+        module_layout = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
+            '/div/div[7]/div[2]/div/div[2]/div[5]/div/div[2]/div/div/div'
+            '/div[7]/div/div[2]')
+        module_layout.click()
+
+        save_button = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]'
+            '/div[2]/div/div[7]/div[2]/div/div[3]/a/button')
+        save_button.click()
+
+        success_message_div = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[1]/span/div/div/div/div/div'
+            '/div[2]/p[1]')
+        expect(success_message_div).to_have_text(
+            'As configurações foram atualizadas',
+            timeout=15_000)
+
+        self.logging.mark_as_done('config_member_area')
+
     def member_content(self) -> None:
         if self.logging.verify_if_done('member_content'):
             return
@@ -480,7 +570,17 @@ class Course(BasePage):
         new_page = new_page_info.value
         self.pg.close()
         self.pg = new_page
-        self.pg.set_viewport_size({"width": 1300, "height": 570})
+        self.pg.set_viewport_size({"width": 1300, "height": 700})
+
+        self._config_member_area()
+
+        content_tab = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]'
+            '/div[2]/div/div[6]/div[2]/div/nav/div/a',
+            has_text='Conteúdo'
+        )
+        content_tab.wait_for()
+        content_tab.click()
 
         for num_module, module in enumerate(self.structure):
             self._create_module(module)
