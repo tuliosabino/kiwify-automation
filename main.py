@@ -33,7 +33,7 @@ def main():
         for course_tag in COURSES:
             course = Course(browser.pg, course_tag)
             try:
-                course.check_if_product_exists()
+                course.create_and_get_id()
                 course.payment_and_orderbump_settings()
 
             finally:

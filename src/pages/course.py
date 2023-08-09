@@ -97,32 +97,6 @@ class Course(BasePage):
         self.logging.data[self.tag] = {'id': self.id}
         self.logging.mark_as_done('create_product')
 
-    def check_if_product_exists(self) -> bool:
-        self.pg.goto(BASE_URL + 'products')
-        self.accept_terms()
-
-        search_field = self.pg.locator(
-            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/'
-            'div[2]/div/div[8]/div/div[2]/div[1]/input'
-        )
-        search_field.fill(self.name)
-        self.pg.wait_for_timeout(500)
-
-        courses_rows_links = self.pg.locator(
-            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]/div'
-            '/div[8]/div/div[3]/div[1]/div/div/table/tbody/tr/td[1]/a'
-        ).all()
-        courses_list = [(course.inner_text(), course)
-                        for course in courses_rows_links]
-
-        for course_text, course_link in courses_list:
-            if course_text == self.name:
-                href = course_link.get_attribute('href')
-                self.id = href.split('/')[-1] if href else None
-                return True
-
-        return False
-
     def save_product(self) -> None:
         self.pg.locator('button', has_text='Salvar produto').nth(-1).click()
 
@@ -282,15 +256,6 @@ class Course(BasePage):
         if self.logging.verify_if_done(module['modulo']):
             return
 
-        add_button = self.pg.locator('//*[@id="options-menu"]')
-        add_button.click()
-
-        add_module_button = self.pg.locator(
-            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
-            '/div/div[7]/div[1]/div[1]/div[1]/div[2]/div[4]/div/div[2]/div'
-            '/div/div[1]/div[1]')
-        add_module_button.click()
-
         add_button = self.pg.locator('//*[@id="options-menu"]',
                                      has_text='Adicionar')
         add_button.click()
@@ -310,7 +275,7 @@ class Course(BasePage):
 
         class_options = self.pg.locator(
             '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
-            '/div/div[2]/div/div[2]/div[2]/div/div/div/div[2]/div/label[1]'
+            '/div/div[2]/div/div[2]/div[2]/div[1]/div/div/div[2]/div[1]/label'
         )
         expect(class_options).to_be_visible()
 
@@ -523,6 +488,7 @@ class Course(BasePage):
         self._insert_file(
             self.meta_data['path_to_images'] + '\\1140x300.png',
             top_image_drop_area)
+        self.pg.wait_for_timeout(500)
         save_cut = self.pg.locator(
             '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
             '/div/div[7]/div[2]/div/div[2]/div[5]/div/div[2]/div/div/div'
@@ -542,6 +508,7 @@ class Course(BasePage):
             '/div/div[7]/div[2]/div/div[2]/div[5]/div/div[2]/div/div/div'
             '/div[5]/div[2]/div/div[1]/div[1]/div/div[1]/div/div[2]/div[2]'
             '/span[1]/button')
+        self.pg.wait_for_timeout(500)
         save_cut.click()
 
         module_layout = self.pg.locator(
@@ -553,6 +520,8 @@ class Course(BasePage):
         save_button = self.pg.locator(
             '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]'
             '/div[2]/div/div[7]/div[2]/div/div[3]/a/button')
+
+        expect(save_button).to_have_text('Salvar alterações', timeout=40_000)
         save_button.click()
 
         success_message_div = self.pg.locator(
