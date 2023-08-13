@@ -6,9 +6,11 @@ from urllib import parse
 from dotenv import load_dotenv
 from playwright.sync_api import Locator, Page, expect
 
-from src.config import (ADDITIONAL_PLAN, COURSES, DOMAIN, PAYMENT_OPTION,
-                        PAYMENT_TIMES, PHONE_NUMBER, PRODUCER_DISPLAY_NAME,
-                        SUPPORT_EMAIL, SUPPORT_NUMBER_ON_FIRST_LESSON)
+from src.config import (ADDITIONAL_PLAN, CHECKOUT_PHONE_NUMBER, COURSES,
+                        DOMAIN, EXIT_POPUP_DISCOUNT, EXIT_POPUP_TEXTS,
+                        PAYMENT_OPTION, PAYMENT_TIMES, PHONE_NUMBER,
+                        PRODUCER_DISPLAY_NAME, SUPPORT_EMAIL,
+                        SUPPORT_NUMBER_ON_FIRST_LESSON)
 
 from .base_page import BasePage
 from .logging import Logging
@@ -31,7 +33,7 @@ creation_data: dict[str, dict[str, str]] = getattr(
 class Course(BasePage):
     def __init__(self, pg: Page, course_tag: str) -> None:
         self.tag = course_tag
-        self.structure: list[dict] = get_structure(course_tag)
+        self.structure: list[dict] = get_structure(course_tag, get_links=False)
         self.pg = pg
         self.meta_data = creation_data[course_tag]
         self.name = self.meta_data['name']
@@ -135,24 +137,43 @@ class Course(BasePage):
                 '//*[@id="general"]/div[1]/div/div[2]/div/div/div[4]/img')
             image_sent.wait_for()
 
+        check_box_plan = self.pg.locator(
+            '//*[@id="general"]/div[2]/div/div[2]/div'
+            '/div/div[2]/div[1]/div/span')
+        self._check_checkbox(check_box_plan) if (
+            ADDITIONAL_PLAN or EXIT_POPUP_DISCOUNT) else None
+
+        add_another_plan_button = self.pg.locator(
+            '//*[@id="general"]/div[2]/div/div[2]/div/div/div[2]/div[2]/span/a'
+        )
+        add_another_plan_button.click() if (
+            ADDITIONAL_PLAN and EXIT_POPUP_DISCOUNT) else None
+
+        plan_name_fields = self.pg.locator(
+            '//*[@id="general"]/div[2]/div/div[2]/div/div'
+            '/div[2]/div[2]/div/div/div[1]/div/input').all()
+        plan_price_fields = self.pg.locator(
+            '//*[@id="general"]/div[2]/div/div[2]/div/div/'
+            'div[2]/div[2]/div/div/div[2]/div/div/div[1]/input').all()
+
         if ADDITIONAL_PLAN:
-            check_box_plan = self.pg.locator(
-                '//*[@id="general"]/div[2]/div/div[2]/div'
-                '/div/div[2]/div[1]/div/span')
-            plan_name_field = self.pg.locator(
-                '//*[@id="general"]/div[2]/div/div[2]/div/div'
-                '/div[2]/div[2]/div[2]/div/div[1]/div/input')
-            plan_price_field = self.pg.locator(
-                '//*[@id="general"]/div[2]/div/div[2]/div/div/'
-                'div[2]/div[2]/div[2]/div/div[2]/div/div/div[1]/input')
-
-            self._check_checkbox(check_box_plan)
-
-            plan_name_field.fill(ADDITIONAL_PLAN)
+            plan_name_fields[0].fill(ADDITIONAL_PLAN)
 
             price = str(round(float(self.prices['additional']), 2))
-            plan_price_field.clear()
-            plan_price_field.fill(price if len(price) == 5 else price + '0')
+            plan_price_fields[0].clear()
+            plan_price_fields[0].fill(
+                price if len(price) == 5 else price + '0')
+
+        if EXIT_POPUP_DISCOUNT:
+            fields_number = 1 if ADDITIONAL_PLAN else 0
+
+            plan_name_fields[fields_number].fill('ExitPopup')
+
+            discount_in_decimal = 1 - (EXIT_POPUP_DISCOUNT / 100)
+            original_price = float(self.prices['base_price'])
+            price = str(round(original_price * discount_in_decimal, 2))
+            plan_price_fields[fields_number].fill(
+                price if len(price) == 5 else price + '0')
 
         support_email_field = self.pg.locator(
             '//*[@id="general"]/div[3]/div/div[2]/div'
@@ -423,6 +444,11 @@ class Course(BasePage):
             '/div[2]/div/div[7]/div[1]/div/div[5]/div[3]/div')
         submit_button.click()
 
+        success_message_div = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[1]/span/div/div/div')
+        expect(success_message_div).to_have_text(
+            'Conteúdo criado com sucesso', timeout=30_000)
+
     def _create_lesson(self, lesson: dict, module: dict, num_module: int,
                        num_lesson: int) -> None:
         if self.logging.verify_if_done(
@@ -571,8 +597,216 @@ class Course(BasePage):
 
         self.logging.mark_as_done('member_content')
 
+    def _create_new_checkout(self) -> None:
+        create_new_checkout_button = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
+            '/div/div[15]/div/div[3]/div[2]/a/button')
+        create_new_checkout_button.click()
+
+        checkout_name_field = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]'
+            '/div[2]/div/div[15]/div/div[1]/div[3]/div[2]/div[2]/div'
+            '/div[1]/div[1]/div/input')
+        checkout_name_field.fill('Checkout Personalizado')
+
+        default_checkout_checkbox = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
+            '/div/div[15]/div/div[1]/div[3]/div[2]/div[2]/div/div[1]/div[2]'
+            '/label/div/div')
+        self._check_checkbox(default_checkout_checkbox)
+
+        confirm_button = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]'
+            '/div[2]/div/div[15]/div/div[1]/div[3]/div[2]/div[2]/div'
+            '/div[2]/a[1]/button')
+        confirm_button.click()
+
+    def _select_checkout_to_edit(self) -> None:
+        checkout_tr = self.pg.locator(
+            '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
+            '/div/div[15]/div/div[4]/div[1]/div/div/table/tbody/tr',
+            has_text='Checkout Personalizado')
+
+        options = checkout_tr.locator('//td[3]/div')
+        options.click()
+
+        customize_button = options.locator(
+            '//div/div[2]/div/div/div[1]/div[1]')
+
+        with self.pg.context.expect_page() as new_page_info:
+            customize_button.click()
+        new_page = new_page_info.value
+        self.pg.close()
+        self.pg = new_page
+        self.pg.set_viewport_size({"width": 1300, "height": 700})
+
+    def _edit_checkout(self) -> None:
+        # Exclude course header
+        self.pg.locator('//*[@id="1,0,1"]').hover()
+        self.pg.locator('//*[@id="1,0,1"]/div[1]/div/div/div[3]').click()
+        self.pg.locator('//*[@id="1,0,1"]/div[1]/div/div/div[1]').click()
+        self.pg.locator('//*[@id="1,0,1"]/div[1]/div[2]/div/a[1]').click()
+
+        top = self.pg.locator('//*[@id="0,0"]')
+
+        # Add course image on top
+        image_component = self.pg.locator('//*[@id="component_drag_image"]')
+        image_component.drag_to(top)
+        self.pg.locator('//*[@id="0,0,0"]').click()
+        image_drop_box = self.pg.locator(
+            '//*[@id="__layout"]/div/div[6]/section[2]/div/div/div[2]'
+            '/div/div[1]/div')
+        self._insert_file(
+            self.meta_data['path_to_images'] + '\\1140x300.png',
+            image_drop_box)
+        self.pg.wait_for_timeout(500)
+        self.pg.locator(
+            '//*[@id="__layout"]/div/div[6]/section[2]/div/div/div[2]/div'
+            '/div[1]/div/div[1]/div/div[2]/div[2]/span[1]').click()
+
+        close_side_menu_button = self.pg.locator(
+            '//*[@id="__layout"]/div/div[6]/section[2]/div/div'
+            '/div[1]/div/div/button[3]')
+        close_side_menu_button.click()
+
+        # Add timer
+        timer = self.pg.locator('//*[@id="component_drag_countdown"]')
+        timer.drag_to(top)
+
+        side_panel = self.pg.locator('//*[@id="1,1"]')
+
+        # Add warranty seals
+        seal = self.pg.locator('//*[@id="component_drag_seal"]')
+        for _ in range(2):
+            seal.drag_to(side_panel)
+        self.pg.locator('//*[@id="1,1,0"]').click()
+        self.pg.locator('//*[@id="__layout"]/div/div[6]/section[2]/div'
+                        '/div/div[2]/div/div[1]/div/div[3]').click()
+        close_side_menu_button.click()
+
+        # Exit Popup
+        self.pg.locator(
+            '//*[@id="__layout"]/div/div[7]/div[4]/div[3]/div[2]/div[2]/div[1]'
+        ).click()
+        popup_type = self.pg.locator(
+            '//*[@id="__layout"]/div/div[7]/div[4]/div[3]/div[2]/div[1]'
+            '/div[1]/section/div/div/div[2]/div[1]/div/select')
+        popup_type.select_option('imgtxt')
+
+        image_drop_box = self.pg.locator(
+            '//*[@id="__layout"]/div/div[7]/div[4]/div[3]/div[2]'
+            '/div[1]/div[1]/section/div/div/div[2]/div[5]/div')
+
+        self._insert_file('src/images/discount.png', image_drop_box)
+
+        image_confirm_button = self.pg.locator(
+            '//*[@id="__layout"]/div/div[7]/div[4]/div[3]/div[2]'
+            '/div[1]/div[1]/section/div/div/div[2]/div[5]/div/div[1]'
+            '/div/div[2]/div[2]/span[1]')
+        image_confirm_button.click()
+
+        title_field = self.pg.locator(
+            '//*[@id="__layout"]/div/div[7]/div[4]/div[3]/div[2]/div[1]'
+            '/div[1]/section/div/div/div[2]/div[3]/div[1]/div/input')
+        message_body_field = self.pg.locator(
+            '//*[@id="__layout"]/div/div[7]/div[4]/div[3]/div[2]/div[1]'
+            '/div[1]/section/div/div/div[2]/div[3]/div[2]/textarea')
+        button_text_field = self.pg.locator(
+            '//*[@id="__layout"]/div/div[7]/div[4]/div[3]/div[2]/div[1]'
+            '/div[1]/section/div/div/div[2]/div[4]/div/input')
+
+        title_field.fill(EXIT_POPUP_TEXTS['title'])
+        message_body_field.fill(EXIT_POPUP_TEXTS['additional_text'])
+        button_text_field.fill(EXIT_POPUP_TEXTS['button_text'])
+
+        close_side_menu_button = self.pg.locator(
+            '//*[@id="__layout"]/div/div[7]/div[4]/div[3]/div[2]/div[1]'
+            '/div[1]/section/div/div/div[1]/div/div/button[2]')
+        close_side_menu_button.click()
+
+        # Notifications
+        notify_div = self.pg.locator(
+            '//*[@id="__layout"]/div/div[7]/div[4]/div[3]/div[2]/div[2]/div[2]'
+        )
+        notify_div.click()
+        # People interested on last 24h
+        self.pg.locator(
+            '//*[@id="__layout"]/div/div[7]/div[4]/div[3]/div[2]/div[1]'
+            '/div[2]/section/div/div/div[2]/div[1]/label/input').check()
+        self.pg.locator(
+            '//*[@id="__layout"]/div/div[7]/div[4]/div[3]/div[2]/div[1]'
+            '/div[2]/section/div/div/div[2]/div[1]/div/div/input').fill('50')
+
+        # Last Week Sales
+        self.pg.locator(
+            '//*[@id="__layout"]/div/div[7]/div[4]/div[3]/div[2]/div[1]'
+            '/div[2]/section/div/div/div[2]/div[5]/label/input').check()
+        self.pg.locator(
+            '//*[@id="__layout"]/div/div[7]/div[4]/div[3]/div[2]/div[1]'
+            '/div[2]/section/div/div/div[2]/div[5]/div/div/input').fill('20')
+        close_side_menu_button = self.pg.locator(
+            '//*[@id="__layout"]/div/div[7]/div[4]/div[3]/div[2]/div[1]'
+            '/div[2]/section/div/div/div[1]/div/div/button[2]')
+        close_side_menu_button.click()
+
+        # Whatsapp Chat
+        chat_div = self.pg.locator(
+            '//*[@id="__layout"]/div/div[7]/div[4]/div[3]/div[2]/div[2]/div[3]'
+        )
+        chat_div.click()
+
+        self.pg.locator(
+            '//*[@id="__layout"]/div/div[7]/div[4]/div[3]/div[2]/div[1]'
+            '/div[3]/section/div/div/div[2]/div[1]/div').click()
+        self.pg.locator(
+            '//*[@id="__layout"]/div/div[7]/div[4]/div[3]/div[2]/div[1]'
+            '/div[3]/section/div/div/div[2]/div[1]/div/ul/li',
+            has_text='whatsapp').click()
+
+        self.pg.locator(
+            '//*[@id="__layout"]/div/div[7]/div[4]/div[3]/div[2]/div[1]'
+            '/div[3]/section/div/div/div[2]/div[2]/div/input'
+        ).fill(f'+55{CHECKOUT_PHONE_NUMBER}')
+
+        close_side_menu_button = self.pg.locator(
+            '//*[@id="__layout"]/div/div[7]/div[4]/div[3]/div[2]/div[1]'
+            '/div[3]/section/div/div/div[1]/div/div/button[2]')
+        close_side_menu_button.click()
+
+        # Copy to mobile
+        mobile_div = self.pg.locator(
+            '//*[@id="__layout"]/div/div[4]/div[1]/div[1]/div[2]/div[2]')
+        mobile_div.click()
+        self.pg.locator(
+            '//*[@id="__layout"]/div/div[4]/div[1]/div[1]/div[2]/div[3]'
+        ).click()
+
+    def checkout_config(self) -> None:
+        if self.logging.verify_if_done('checkout_config'):
+            return
+
+        url = (BASE_URL + f'products/edit/{self.id}?tab=checkout-builder')
+        self.pg.goto(url) if self.pg.url != url else None
+
+        self._create_new_checkout()
+
+        self._select_checkout_to_edit()
+
+        self._edit_checkout()
+
+        save_button = self.pg.locator(
+            '//*[@id="__layout"]/div/div[4]/div[1]/div[2]/a[1]')
+        save_button.click()
+
+        success_message = self.pg.locator(
+            '//*[@id="__layout"]/div/div[4]/div[1]/div[2]/div')
+        expect(success_message).to_have_text('Tudo certo!', timeout=30_000)
+
+        self.logging.mark_as_done('checkout_config')
+
     def configs(self) -> None:
         self.general_settings()
+        self.checkout_config()
         self.member_content()
 
         ...

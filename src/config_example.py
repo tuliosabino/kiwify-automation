@@ -24,6 +24,21 @@ PAYMENT_OPTION = "3"
 #  "1" for 1x, "2" for 2x, etc. Maximun is 12.
 PAYMENT_TIMES = "12"
 
+# Set 0 to not use Exit Popup
+EXIT_POPUP_DISCOUNT = 0
+
+EXIT_POPUP_TEXTS = {
+    'title': ('PARABÉNS, VOCÊ ACABOU DE GANHAR '
+              f'{EXIT_POPUP_DISCOUNT}% DE DESCONTO...'),
+    'button_text': 'QUERO APROVEITAR ESSA CONDIÇÃO EXCLUSIVA!',
+    'additional_text': '''
+
+Essa condição não vai se repetir! ESSA É SUA CHANCE!'''
+}
+
+# Set '' or None to not use Whatsapp on Checkout
+CHECKOUT_PHONE_NUMBER = '00-00000-0000'
+
 # ----------------------- ORDERBUMP|UPSELL CONFIGS ----------------------------
 
 # name for a additional plan, leave empty to not create one
