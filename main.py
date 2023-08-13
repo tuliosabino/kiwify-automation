@@ -14,15 +14,15 @@ BASE_URL = getenv('BASE_URL', '')
 
 def main():
     with sync_playwright() as p:
-        browser = BasePage(p)
-        browser.pg.goto(BASE_URL)
-        browser.accept_terms()
-        browser.login()
+        base_page = BasePage(p)
+        base_page.pg.goto(BASE_URL)
+        base_page.accept_terms()
+        base_page.login()
 
-        browser.select_account()
+        base_page.select_account()
 
         for course_tag in COURSES:
-            course = Course(browser.pg, course_tag)
+            course = Course(base_page.browser.pages[0], course_tag)
             try:
                 course.create_and_get_id()
                 course.configs()
@@ -31,7 +31,7 @@ def main():
                 course.logging.dump()
         ...
         for course_tag in COURSES:
-            course = Course(browser.pg, course_tag)
+            course = Course(base_page.browser.pages[0], course_tag)
             try:
                 course.create_and_get_id()
                 course.payment_and_orderbump_settings()

@@ -29,6 +29,7 @@ class BasePage():
         )
         pg = browser.pages[0]
         pg.set_viewport_size({"width": 1300, "height": 700})
+        self.browser = browser
 
         return pg
 
