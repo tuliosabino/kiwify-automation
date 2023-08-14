@@ -249,7 +249,7 @@ class Course(BasePage):
             description_field = self.pg.locator(
                 '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
                 '/div/div[9]/div/section/div/div[2]/div[5]/div/div/input')
-            description_field.fill(course_meta_data['descrição'])
+            description_field.fill(course_meta_data['orderbump_text'])
 
             use_image_checkbox = self.pg.locator(
                 '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
@@ -259,19 +259,20 @@ class Course(BasePage):
             add_button = self.pg.locator(
                 '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
                 '/div/div[9]/div/section/div/div[3]/span[1]/button')
-            add_button.click()
+            add_button.dispatch_event('click')
 
             success_message = self.pg.locator(
                 '//*[@id="__layout"]/div/div/div[1]',
                 has_text='As alterações do produto foram salvas')
             success_message.wait_for()
-            close_message_button = self.pg.locator(
-                '//*[@id="__layout"]/div/div/div[1]/span/div/div/div/div/div'
-                '/div[3]/button')
-            close_message_button.click()
+            # close_message_button = self.pg.locator(
+            #     '//*[@id="__layout"]/div/div/div[1]/span/div/div/div/div/div'
+            #     '/div[3]/button')
+            # close_message_button.click()
 
-        for course_tag in self.meta_data['orderbump']:
-            add_order_bump(course_tag)
+        for course_tag in (self.meta_data['orderbump'] +
+                           self.meta_data['upsell']):
+            add_order_bump(course_tag) if course_tag in COURSES else None
 
     def _create_module(self, module: dict) -> None:
         if self.logging.verify_if_done(module['modulo']):
@@ -806,7 +807,7 @@ class Course(BasePage):
 
     def configs(self) -> None:
         self.general_settings()
-        self.checkout_config()
-        self.member_content()
+        # self.checkout_config()
+        # self.member_content()
 
         ...
