@@ -45,11 +45,12 @@ class BasePage():
         ...
 
     def login(self) -> None:
-        if self.pg.locator("input[name='email']").is_visible():
+        if self.pg.url == 'https://dashboard.kiwify.com.br/login?redirect=%2F':
             self.pg.fill("input[name='email']", EMAIL)
             self.pg.fill("input[name='password']", PASSWORD)
             self.pg.locator("button", has_text="Entrar").click()
-            self.pg.wait_for_url(BASE_URL)
+            print('Aguardando Login ser completado...')
+            self.pg.wait_for_url(BASE_URL, timeout=900_000)
 
     def select_account(self) -> None:
         if not ACCOUNT_NAME:
