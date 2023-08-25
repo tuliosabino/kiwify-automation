@@ -1,15 +1,24 @@
 # Sobre o projeto
-Essa aplicação tem como objetivo automatizar a criação e configuração (pagamento, checkout, área de membros) de cursos na Kiwify, usando o Playwright.
+Essa aplicação visa automatizar a criação e configuração (pagamento, checkout, área de membros) de cursos na Kiwify, usando o Playwright.
 
-Muitos dados utilizados no código vieram de outros apps, então alguns trechos podem não fazer muito sentido no contexto dessa aplicação.
+Muitos dados utilizados no código vieram de outras aplicações, então alguns trechos podem não fazer muito sentido no contexto dessa aplicação.
 
-Algumas coisas ainda serão implementadas, principalmente a documentação, mas o app já está funcional e pode ser usado/adaptado.
+Algumas coisas ainda serão implementadas, principalmente a documentação, mas já está funcional e pode ser usado/adaptado.
 
 
 # Como usar
-Toda a configuração da aplicação é feita por dois arquivos [.env](.env_example), onde é configurado o ambiente onde a automação está rodando e [config.py](/src/config_example.py), onde são configuradas todas as informações sobre os cursos que serão cadastrados.
 
-Além disso toda a estrutura do curso já deve estar pronta em uma objeto List, no meu caso tenho a função [get_structure](/src/pages/course.py#L24) que retorna essa estrutura. [Aqui](#estrutura-do-curso) você confere um exemplo dessa estrutura.
+Antes de rodar é necessário [configurá-la](#configurando-a-aplicação) primeiro.
+Toda a configuração é feita por dois arquivos [.env](#env), onde é configurado o ambiente onde a automação está rodando, e [config.py](#configpy), onde são configuradas todas as informações sobre os cursos que serão cadastrados.
+
+Além disso, toda a estrutura do curso já deve estar pronta em um objeto List, no meu caso, tenho a função [get_structure](/src/pages/course.py#L24) que retorna essa estrutura. [Aqui](#estrutura-do-curso) você confere um exemplo dessa estrutura para que você consiga criar a sua.
+
+Após fazer essas configurações, você precisará fazer a instalação de todas as dependências do projeto. Nesse ponto, você pode fazer via poetry ou via o arquivo requirements.txt.
+
+Com tudo concluído você pode executar a aplicação e ver a mágica acontecer!
+
+
+# Configurando a Aplicação
 
 ## .env
 
@@ -19,7 +28,7 @@ Explicação das configurações de ambiente:
 | Constante | Descrição |
 | --------- | --------- |
 | `CROME_EXE` | Caminho do executável do Google Chrome, deixar em branco para utilizar o default do Chrome.|
-| `CHROME_USER_DATA_DIR` | Caminho para os dados de navegação (cookies, seção, etc..), deixar a string em branco para usar uma pasta temporária, isso vai requerir que você faça login a cada execução do script, o ideal já é configurar algum caminho para que esses dados fiquem salvos. |
+| `CHROME_USER_DATA_DIR` | Caminho para os dados de navegação (cookies, seção, etc.), deixar a string em branco para usar uma pasta temporária, isso vai requerer que você faça login a cada execução do script, o ideal já é configurar algum caminho para que esses dados fiquem salvos. |
 | `EMAIL`|  E-mail de login de sua conta da Kiwify |
 |`PASSWORD` | Senha de login de sua conta da Kiwify |
 | `GET_STRUCTURE_PATH` | No meu caso essa constante representa o caminho do módulo que contém a função que fornece a estrutura do curso a ser cadastrado. Essa parte do código não posso compartilhar, mas deixarei um [exemplo](#estrutura-do-curso) mais abaixo da estrutura retornada por ela. Aqui você terá que adaptar o código. |
@@ -36,22 +45,22 @@ Nesse arquivo você deve setar todas as configurações e informações referent
 | `ACCOUNT_NAME` | Nome da conta Kiwify onde o curso será criado. Funciona apenas se a conta que for logada for colaborador de alguma outra conta. Deixar uma strign vazia para não utilizar essa opção |
 | `DOMAIN` | Domínio onde a página do produto(s) está hospedada. |
 | `SUPPORT_EMAIL` | E-mail de suporte que aparece no checkout do produto. |
-| `PRODUCER_DISPLAY_NAME` | Nome que é mostrado para os compradores do produto. |
-| `PHONE_NUMBER` | Número de Whatsapp para aparecer como suporte dentro do curso, na primeira aula. Deixar a string vazia para não criar o link na aula. Deve estar no formato "00-00000-0000"( DDD, 5 Primeiros Dígitos e 4 Digitos restantes separados por `-`) |
+| `PRODUCER_DISPLAY_NAME` | Nome mostrado para os compradores do produto. |
+| `PHONE_NUMBER` | Número de Whatsapp para aparecer como suporte dentro do curso, na primeira aula. Deixar a string vazia para não criar o link na aula. Deve estar no formato "00-00000-0000"(DDD, 5 Primeiros Dígitos e 4 Digitos restantes separados por `-`) |
 | `PAYMENT_OPTION` | Define quais formas de pagamento serão aceitas. Deve ser uma string com uma das opções: "1" para Cartão de Crédito e Boleto; "2" para apenas Cartão de Crédito; "3" para todas as formas de pagamento; "4" para Cartão de Crédito e Pix. |
-| `PAYMENT_TIMES` | Quantidade máxima de parcelas permiticas para o produto. No máximo 12. |
+| `PAYMENT_TIMES` | Quantidade máxima de parcelas permitidas para o produto. No máximo 12. |
 | `EXIT_POPUP_DISCOUNT` | Percentual que será oferecido no Exit Popup. Deve ser um int. Deixar 0 ou False para não utilizar o Exit Popup. |
-| `CHECKOUT_PHONE_NUMBER` | Número de Whatsapp para aparecer no Checkout do produto, utiliza um plugin da plataforma que exibe um botão do whatsapp para o possível comprador entrar em contato. Deixar a string vazia para não utilizar esse botão. Deve estar no formato "00000000000" (DDD e número juntos, sem separação) |
+| `CHECKOUT_PHONE_NUMBER` | Número de WhatsApp para aparecer no Checkout do produto, utiliza um plugin da plataforma que exibe um botão do WhatsApp para o possível comprador entrar em contato. Deixar a string vazia para não utilizar esse botão. Deve estar no formato "00000000000" (DDD e número juntos, sem separação) |
 | `ADDITIONAL_PLAN` | Nome do plano adicional a ser criado, utiliza o valor de "additional" dentro da variável COURSES. Deixar a string vazia para não criar planos adicionais |
-| `COURSES` | Um dicionário onde as chaves são a course_tag e o valor é outro dicionário com os preços do curso. Essa course_tag será usada para identificar o curso durante toda a execução do script e também para buscar ma estrutura e nos meta dados as informações do curso. no arquivo [config_example.py](src/config_example.py#L48) tem um exemplo de como deve ser esse dicionário. |
+| `COURSES` | Um dicionário onde as chaves são a course_tag e o valor é outro dicionário com os preços do curso. Essa course_tag será usada para identificar o curso durante toda a execução do script e também para buscar ma estrutura e nos meta dados as informações do curso. No arquivo [config_example.py](src/config_example.py#L48) tem um exemplo de como deve ser esse dicionário. |
 
-## Estruturas de dados
+# Estruturas de dados
 
 Exemplos das estruturas de dados utilizados na execução do script.
 
 ### Estrutura do curso
 
-Nesta implementação optei por reutilizar uma função de outra aplicação minha que retorna uma lista de dicionários com as informações sobre o conteúdo do curso (módulos, aulas, etc..), essa função foi definida [aqui](src/pages/course.py#L23) e é utilizada [aqui](src/pages/course.py#L34). Você precisará adaptar isso para a sua realidade.
+Nesta implementação optei por reutilizar uma função de outra aplicação minha que retorna uma lista de dicionários com as informações sobre o conteúdo do curso (módulos, aulas, etc.), essa função foi definida [aqui](src/pages/course.py#L23) e é utilizada [aqui](src/pages/course.py#L34). Você precisará adaptar isso para a sua realidade.
 
 Segue o exemplo da estrutura retornada pela função, com comentários sobre o que cada item significa e exemplo de valores:
 
@@ -125,7 +134,7 @@ Segue o exemplo da estrutura retornada pela função, com comentários sobre o q
 
 ### Meta dados do Curso
 
-Aqui fica as informações sobre a criação do produto em si, ou seja, o curso que será criado.
+Aqui ficam as informações sobre a criação do produto em si, ou seja, o curso que será criado.
 
 No meu caso esses dados ficam armazenados em uma variável, [creation_data](src/pages/course.py#L27), que é uma lista de dicionários, onde cada um representa os dados de um curso.
 
@@ -158,7 +167,7 @@ Fique a vontade para modificar como achar melhor!''',
 
 ### Lista das imagens necessárias
 
-As imagens também reaproveitei de outra aplicação. Isso siginifica que utilizei que não são do tamanho ideal para a Kiwify, e que o nome delas no meu script também vai ser diferente.
+As imagens também reaproveitei de outra aplicação. Isso significa que utilizei que não são do tamanho ideal para a Kiwify, e que o nome delas no meu script também vai ser diferente.
 
 Você pode utilizar o nome que está no script ou alterar o código para ficar com os nomes corretos. Em todo caso deixarei abaixo todas as informações.
 
@@ -170,6 +179,6 @@ Você pode utilizar o nome que está no script ou alterar o código para ficar c
 | N/A ¹ | Topo do checkout | 1140x300.png |
 | 200x300 ² | Exit Popup | discount.png |
 
-1. Nessa imagem você pode colocar o tamanho que achar ideal que ela se ajustara. só terá que mudar [aqui](src/pages/course.py#L661) no código por conta de ser o mesmo nome da imagem de topo da área de membros.
+1. Nessa imagem você pode colocar o tamanho que achar ideal que ela se ajustara, só terá que mudar [aqui](src/pages/course.py#L661) no código por conta de ser o mesmo nome da imagem de topo da área de membros.
 
 2. Essa imagem fica salva em [src/images](src/images).
