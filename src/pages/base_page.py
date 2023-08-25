@@ -10,7 +10,7 @@ load_dotenv()
 CROME_EXE: str = getenv("CROME_EXE", "")
 CHROME_USER_DATA_DIR: str = getenv("CHROME_USER_DATA_DIR", "")
 
-BASE_URL: str = getenv("BASE_URL", "")
+BASE_URL = 'https://dashboard.kiwify.com.br/'
 
 EMAIL: str = getenv("EMAIL", "")
 PASSWORD: str = getenv("PASSWORD", "")
@@ -22,8 +22,8 @@ class BasePage():
 
     def make_pg(self, playwright_object: Playwright) -> Page:
         browser = playwright_object.chromium.launch_persistent_context(
-            executable_path=CROME_EXE,
-            user_data_dir=CHROME_USER_DATA_DIR,
+            executable_path=CROME_EXE if CROME_EXE else None,
+            user_data_dir=CHROME_USER_DATA_DIR if CHROME_USER_DATA_DIR else '',
             channel="chrome",
             headless=False,
         )
@@ -52,6 +52,9 @@ class BasePage():
             self.pg.wait_for_url(BASE_URL)
 
     def select_account(self) -> None:
+        if not ACCOUNT_NAME:
+            return
+
         account_box = self.pg.locator(
             '//*[@id="__layout"]/div/div/div[3]/div[2]/div/div/div[1]'
             '/div/div[1]/div[1]/span/button/div/div'

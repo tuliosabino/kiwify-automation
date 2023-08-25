@@ -9,7 +9,7 @@ from src.pages.course import Course
 
 load_dotenv()
 
-BASE_URL = getenv('BASE_URL', '')
+BASE_URL = 'https://dashboard.kiwify.com.br/'
 
 
 def main():

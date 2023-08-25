@@ -9,16 +9,14 @@ from playwright.sync_api import Locator, Page, expect
 from src.config import (ADDITIONAL_PLAN, CHECKOUT_PHONE_NUMBER, COURSES,
                         DOMAIN, EXIT_POPUP_DISCOUNT, EXIT_POPUP_TEXTS,
                         PAYMENT_OPTION, PAYMENT_TIMES, PHONE_NUMBER,
-                        PRODUCER_DISPLAY_NAME, SUPPORT_EMAIL,
-                        SUPPORT_NUMBER_ON_FIRST_LESSON)
+                        PRODUCER_DISPLAY_NAME, SUPPORT_EMAIL)
 
 from .base_page import BasePage
 from .logging import Logging
 
 load_dotenv()
 
-BASE_URL = getenv('BASE_URL', '')
-PRODUCT_URL = getenv('PRODUCT_URL', '')
+BASE_URL = 'https://dashboard.kiwify.com.br/'
 
 GET_STRUCTURE_PATH: str = getenv("GET_STRUCTURE_PATH", "")
 sys.path.append(GET_STRUCTURE_PATH)
@@ -27,7 +25,7 @@ get_structure = getattr(import_module('get_links'), 'get_links')
 CREATION_META_PATH: str = getenv("CREATION_META_PATH", "")
 sys.path.append(CREATION_META_PATH)
 creation_data: dict[str, dict[str, str]] = getattr(
-    import_module('courses_creation'), 'course_info')
+    import_module('root.data.courses_creation'), 'course_info')
 
 
 class Course(BasePage):
@@ -114,7 +112,7 @@ class Course(BasePage):
         if self.logging.verify_if_done('general_settings'):
             return
 
-        url = PRODUCT_URL.format(id=self.id)
+        url = BASE_URL + f'products/edit/{self.id}'
         self.pg.goto(url) if self.pg.url != url else None
         self.accept_terms()
 
@@ -157,7 +155,7 @@ class Course(BasePage):
             'div[2]/div[2]/div/div/div[2]/div/div/div[1]/input').all()
 
         if ADDITIONAL_PLAN:
-            plan_name_fields[0].fill(ADDITIONAL_PLAN)
+            plan_name_fields[0].fill(ADDITIONAL_PLAN + ' | ' + self.tag)
 
             price = str(round(float(self.prices['additional']), 2))
             plan_price_fields[0].clear()
@@ -196,7 +194,7 @@ class Course(BasePage):
         if self.logging.verify_if_done('payment_and_orderbump_settings'):
             return
 
-        url = PRODUCT_URL.format(id=self.id) + '?tab=settings'
+        url = BASE_URL + f'products/edit/{self.id}?tab=settings'
         self.pg.goto(url) if self.pg.url != url else None
         self.accept_terms()
 
@@ -215,9 +213,9 @@ class Course(BasePage):
                 'button', has_text='Adicionar order bump')
             order_bumps = self.pg.locator(
                 '//*[@id="settings"]/div[4]/div/div[2]/div'
-                '/div/div[1]/div/div/div/table/tbody/tr'
-            ).all()
-            if len(order_bumps) >= len(course_meta_data['orderbump']):
+                '/div/div[1]/div/div/div/table/tbody'
+            )
+            if f'{ADDITIONAL_PLAN} | {course_tag}' in order_bumps.inner_text():
                 return
             add_order_bump_button.click()
 
@@ -236,7 +234,7 @@ class Course(BasePage):
                 '//*[@id="__layout"]/div/div/div[3]/div[3]/main/div[2]/div[2]'
                 '/div/div[9]/div/section/div/div[2]/div[2]/div/div/ul/li'
             ).all()
-            option_to_select = (ADDITIONAL_PLAN
+            option_to_select = (ADDITIONAL_PLAN + ' | ' + course_tag
                                 if ADDITIONAL_PLAN else course_name)
             [option.click() for option in offer_select_options
              if option.inner_text() == option_to_select]
@@ -265,14 +263,16 @@ class Course(BasePage):
                 '//*[@id="__layout"]/div/div/div[1]',
                 has_text='As alterações do produto foram salvas')
             success_message.wait_for()
-            # close_message_button = self.pg.locator(
-            #     '//*[@id="__layout"]/div/div/div[1]/span/div/div/div/div/div'
-            #     '/div[3]/button')
-            # close_message_button.click()
+            close_message_button = self.pg.locator(
+                '//*[@id="__layout"]/div/div/div[1]/span/div/div/div/div/div'
+                '/div[3]/button')
+            close_message_button.click()
 
         for course_tag in (self.meta_data['orderbump'] +
                            self.meta_data['upsell']):
             add_order_bump(course_tag) if course_tag in COURSES else None
+
+        self.logging.mark_as_done('payment_and_orderbump_settings')
 
     def _create_module(self, module: dict) -> None:
         if self.logging.verify_if_done(module['modulo']):
@@ -459,7 +459,7 @@ class Course(BasePage):
         self._open_new_form_lesson(num_module)
 
         if (num_module == 0 and num_lesson == 0
-                and SUPPORT_NUMBER_ON_FIRST_LESSON):
+                and PHONE_NUMBER):
             course_name = self.meta_data['name']
             phone = ''.join(PHONE_NUMBER.split('-'))
             text = parse.quote(
@@ -807,7 +807,7 @@ class Course(BasePage):
 
     def configs(self) -> None:
         self.general_settings()
-        # self.checkout_config()
-        # self.member_content()
+        self.checkout_config()
+        self.member_content()
 
         ...

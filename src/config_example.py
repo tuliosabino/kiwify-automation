@@ -7,7 +7,6 @@ DOMAIN = 'https://yourdomoian.com/'
 SUPPORT_EMAIL = 'youremail@yourprovider.com'
 PRODUCER_DISPLAY_NAME = 'Your Name that will be shown to your customers'
 
-SUPPORT_NUMBER_ON_FIRST_LESSON = True
 PHONE_NUMBER = '00-00000-0000'
 
 # --------------------------- CHECKOUT CONFIGS --------------------------------
